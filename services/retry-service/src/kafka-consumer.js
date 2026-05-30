@@ -12,18 +12,18 @@ const consumer = kafka.consumer({
 
 const connectConsumer = async () => {
   await consumer.connect();
-  await consumer.subscribe({ topic: 'send_failed', fromBeginning: true });
+  await consumer.subscribe({ topic: 'send_failed', fromBeginning: false });
 
-  console.log('[Retry Service Consumer] Đang lắng nghe topic: "send_failed"');
+  console.log('[Retry Service Consumer] Listening on topic: "send_failed"');
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       try {
         const failedMessage = JSON.parse(message.value.toString());
-        console.log(`\n[Retry Service Consumer] Nhận từ topic [${topic}]`);
+        console.log(`\n[Retry Service Consumer] Received from topic [${topic}]`);
         await handleRetry(failedMessage);
       } catch (error) {
-        console.error('[Retry Service Consumer] Lỗi xử lý message:', error.message);
+        console.error('[Retry Service Consumer] Error processing message:', error.message);
       }
     },
   });

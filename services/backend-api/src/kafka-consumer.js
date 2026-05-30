@@ -15,16 +15,16 @@ const connectConsumer = async () => {
 
   await consumer.subscribe({ topics: ['reply_commands', 'send_retry'], fromBeginning: false });
 
-  console.log('[Backend API Consumer] Đang lắng nghe topics: "reply_commands", "send_retry"');
+  console.log('[Backend API Consumer] Listening on topics: "reply_commands", "send_retry"');
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       try {
         const command = JSON.parse(message.value.toString());
-        console.log(`\n[Backend API Consumer] Nhận từ topic [${topic}]`);
+        console.log(`\n[Backend API Consumer] Received from topic [${topic}]`);
         await handleCommand(command);
       } catch (error) {
-        console.error('[Backend API Consumer] Lỗi parse hoặc xử lý message:', error.message);
+        console.error('[Backend API Consumer] Error parsing or processing message:', error.message);
       }
     },
   });

@@ -27,17 +27,13 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-app.post('/webhook', async (req, res) => {
-  const body = req.body;
+app.post('/webhook', (req, res) => {
+  res.status(200).send('EVENT_RECEIVED');
 
-  try {
-    await normalizeAndPublish(body);
-
-    res.status(200).send('EVENT_RECEIVED');
-  } catch (error) {
-    console.error('Error processing webhook event:', error);
-    res.status(500).send('INTERNAL_SERVER_ERROR');
-  }
+  // Process asynchronously, do not block response
+  normalizeAndPublish(req.body).catch(error => {
+    console.error('[Webhook] Error processing event:', error.message);
+  });
 });
 
 app.listen(PORT, async () => {

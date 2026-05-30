@@ -1,6 +1,7 @@
 groups:
   - name: kafka_alerts
     rules:
+      # Alert when Kafka Broker is down
       - alert: KafkaBrokerDown
         expr: kafka_brokers == 0
         for: 1m
@@ -10,11 +11,40 @@ groups:
           summary: "Kafka Broker is down"
           description: "No Kafka brokers are running."
 
-      - alert: DeadLetterQueueAlert
-        expr: increase(kafka_topic_partition_current_offset{topic="dead_letter"}[5m]) > 0
+      # Alert when a new message enters the Dead Letter Queue
+      - alert: DeadLetterQueueReceived
+        expr: increase(kafka_topic_partition_current_offset{topic="dead_letter"}[1m]) > 0
+        for: 0m
         labels:
           severity: critical
-          service: "retry-service"
         annotations:
-          summary: "New messages in Dead Letter Queue (DLQ)"
-          description: "Phát hiện message rơi vào DLQ do lỗi khi gọi Facebook API vượt quá số lần retry."
+          summary: "New message received in Dead Letter Queue"
+          description: >
+            Topic dead_letter has received a new message.
+            Check Kafka UI at http://localhost:8080
+            to view the content and handle it manually.
+
+      # Alert when consumer lag is too high
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumer_group_lag > 500
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer lag is abnormally high"
+          description: >
+            Consumer group {{ $labels.consumergroup }}
+            is lagging {{ $value }} messages on topic
+            {{ $labels.topic }}.
+
+      # Alert when no events are received in raw_events for 10 minutes
+      - alert: WebhookReceiverSilent
+        expr: increase(kafka_topic_partition_current_offset{topic="raw_events"}[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No events received from Facebook in 10 minutes"
+          description: >
+            Topic raw_events has no new messages.
+            Check the Facebook Webhook subscription.

@@ -4,14 +4,14 @@ const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3', 10);
 
 
 const calcBackoffDelay = (retryCount) => {
-  return 1000 * Math.pow(2, retryCount - 1);
+  return 1000 * Math.pow(2, retryCount);
 };
 
 
 const handleRetry = async (failedMessage) => {
   const { command_id, event_id, retry_count, last_error, payload } = failedMessage;
 
-  console.log(`\n[Retry Handler] Nhận failed message [${command_id}]`);
+  console.log(`\n[Retry Handler] Received failed message [${command_id}]`);
   console.log(`  retry_count : ${retry_count}`);
   console.log(`  last_error  : ${last_error}`);
   console.log(`  MAX_RETRIES : ${MAX_RETRIES}`);
@@ -23,7 +23,7 @@ const handleRetry = async (failedMessage) => {
   }
 
   const delay = calcBackoffDelay(retry_count);
-  console.log(`[Retry Handler] Sẽ retry sau ${delay}ms (retry #${retry_count})...`);
+  console.log(`[Retry Handler] Will retry after ${delay}ms (retry #${retry_count})...`);
 
   await new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -41,7 +41,7 @@ const handleRetry = async (failedMessage) => {
   };
 
   await publishSendRetry(retryMessage);
-  console.log(`[Retry Handler] Đã gửi lại -> send_retry [retry #${retry_count}]`);
+  console.log(`[Retry Handler] Resent -> send_retry [retry #${retry_count}]`);
 };
 
 module.exports = { handleRetry };

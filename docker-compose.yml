@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # -- Hạ tầng Kafka --
@@ -175,9 +174,16 @@ services:
     environment:
       - KAFKA_BROKERS=kafka:29092
       - KAFKA_GROUP_ID=backend-api-group
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=fb_api_db
+      - DB_USER=fb_api_user
+      - DB_PASSWORD=fb_api_password
     depends_on:
       init-kafka:
         condition: service_completed_successfully
+      postgres:
+        condition: service_started
 
   retry-service:
     image: node:20-alpine

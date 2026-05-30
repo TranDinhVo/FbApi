@@ -15,7 +15,7 @@ const producer = kafka.producer({
 
 const connectProducer = async () => {
   await producer.connect();
-  console.log('[Backend API Producer] Đã kết nối Kafka producer.');
+  console.log('[Backend API Producer] Connected to Kafka producer.');
 };
 
 
@@ -41,7 +41,7 @@ const publishSendFailed = async (command, retryCount, errorMessage) => {
     messages: [{ key: command.command_id, value: JSON.stringify(message) }],
   });
 
-  console.log(`[Backend API Producer] Đã publish send_failed [${command.command_id}] -> topic "send_failed"`);
+  console.log(`[Backend API Producer] Published send_failed [${command.command_id}] -> topic "send_failed"`);
 };
 
 const disconnectProducer = async () => {

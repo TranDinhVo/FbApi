@@ -15,7 +15,7 @@ const producer = kafka.producer({
 
 const connectProducer = async () => {
   await producer.connect();
-  console.log('[Core Service Producer] Đã kết nối Kafka producer thành công.');
+  console.log('[Core Service Producer] Kafka producer connected successfully.');
 };
 
 const publishReplyCommand = async (command) => {
@@ -28,7 +28,7 @@ const publishReplyCommand = async (command) => {
       },
     ],
   });
-  console.log(`[Core Service Producer] Đã publish reply_command [${command.command_id}] -> topic "reply_commands"`);
+  console.log(`[Core Service Producer] Published reply_command [${command.command_id}] -> topic "reply_commands"`);
 };
 
 const disconnectProducer = async () => {

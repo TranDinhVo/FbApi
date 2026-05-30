@@ -1,7 +1,7 @@
 {
   "name": "backend-api",
-  "version": "1.0.0",
-  "description": "Backend API - Consume reply_commands/send_retry, call Facebook Graph API, publish send_failed on error",
+  "version": "2.0.0",
+  "description": "Backend API - REST endpoints, Kafka consumer, Facebook Graph API with Circuit Breaker & Idempotency",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -10,7 +10,10 @@
   "dependencies": {
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "kafkajs": "^2.2.4",
+    "opossum": "^8.1.4",
+    "pg": "^8.11.5",
     "uuid": "^9.0.0"
   }
 }

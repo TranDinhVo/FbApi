@@ -5,6 +5,7 @@ const { detectSpam } = require('./spam-filter');
 const { classifyEvent } = require('./ai-classifier');
 const { makeDecision } = require('./decision-engine');
 const { connectProducer, publishReplyCommand, disconnectProducer } = require('./kafka-producer');
+const { checkRateLimit } = require('./rate-limiter');
 
 const kafka = new Kafka({
   clientId: 'core-service',
@@ -13,6 +14,10 @@ const kafka = new Kafka({
 
 const consumer = kafka.consumer({ groupId: process.env.KAFKA_GROUP_ID || 'core-service-group' });
 
+// Dedup: store processed event_ids to avoid duplicates
+const processedEventIds = new Set();
+const MAX_DEDUP_SIZE = 10000;
+
 const DECISION_TO_ACTION = {
   reply_positive: 'reply',
   reply_negative: 'reply',
@@ -20,6 +25,13 @@ const DECISION_TO_ACTION = {
   hidden: 'hide',
   delete: 'delete',
   hidden_and_queued: 'hide',
+};
+
+// For message type, use send_message instead of reply
+const DECISION_TO_MESSAGE_ACTION = {
+  reply_positive: 'send_message',
+  reply_negative: 'send_message',
+  auto_reply: 'send_message',
 };
 
 const REPLY_TEXTS = {
@@ -48,17 +60,44 @@ const run = async () => {
   await consumer.subscribe({ topic: 'raw_events', fromBeginning: false });
 
   console.log('====================================================');
-  console.log('[Core Service] Khởi động thành công!');
-  console.log('[Core Service] Đang lắng nghe topic "raw_events"...');
-  console.log('[Core Service] Sau xử lý sẽ publish tới "reply_commands"');
+  console.log('[Core Service] Started successfully!');
+  console.log('[Core Service] Listening on topic "raw_events"...');
+  console.log('[Core Service] After processing, publishes to "reply_commands"');
+  console.log('[Core Service] Rate Limiting: Max 20 events / sender / minute');
   console.log('====================================================');
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       try {
         const event = JSON.parse(message.value.toString());
+        const eventId = event.commentId || event.messageId || event.postId || 'unknown';
 
-        console.log(`\n>> Nhận event mới: [${event.type}] - Nội dung: "${event.content}"`);
+        // === EVENT DEDUP ===
+        if (processedEventIds.has(eventId)) {
+          console.log(`[Core Service] SKIP - event ${eventId} already processed (dedup).`);
+          return;
+        }
+        processedEventIds.add(eventId);
+        if (processedEventIds.size > MAX_DEDUP_SIZE) {
+          const first = processedEventIds.values().next().value;
+          processedEventIds.delete(first);
+        }
+
+        console.log(`\n>> New event received: [${event.type}] - Content: "${event.content}"`);
+
+        // === RATE LIMITING ===
+        const rateResult = checkRateLimit(event.senderId);
+        if (rateResult.limited) {
+          console.log(`[Core Service] RATE LIMITED - sender ${event.senderId} (${rateResult.count} events/min) -> pending_review`);
+          // Log but skip AI processing and auto reply
+          return;
+        }
+
+        // Skip 'post' event type - no analysis needed
+        if (event.type === 'post') {
+          console.log('[Core Service] Event type "post" - skipping analysis.');
+          return;
+        }
 
         const spamResult = detectSpam(event.content);
 
@@ -71,15 +110,21 @@ const run = async () => {
 
         console.log(`[Core Service] Decision: ${decision} | Intent: ${aiResult.intent} | Sentiment: ${aiResult.sentiment}`);
 
-        const action = DECISION_TO_ACTION[decision];
+        // Determine action based on event type (comment -> reply, message -> send_message)
+        let action;
+        if (event.type === 'message' && DECISION_TO_MESSAGE_ACTION[decision]) {
+          action = DECISION_TO_MESSAGE_ACTION[decision];
+        } else {
+          action = DECISION_TO_ACTION[decision];
+        }
 
         if (!action || decision === 'no_action' || decision === 'notify_staff') {
-          console.log(`[Core Service] Không có hành động Kafka cho decision: ${decision}. Bỏ qua.`);
+          console.log(`[Core Service] No Kafka action for decision: ${decision}. Skipping.`);
           return;
         }
 
         let replyText = null;
-        if (action === 'reply') {
+        if (action === 'reply' || action === 'send_message') {
           const texts = REPLY_TEXTS[decision];
           replyText = texts ? pickRandom(texts) : 'Cảm ơn bạn đã liên hệ!';
         }
@@ -88,11 +133,12 @@ const run = async () => {
         const command = {
           schema_version: 1,
           command_id: uuidv4(),
-          event_id: event.eventId || event.commentId || event.senderId || 'unknown',
+          event_id: eventId,
           action,
           target: {
             comment_id: event.commentId || null,
             sender_id: event.senderId || null,
+            post_id: event.postId || null,
             type: event.type || 'comment',
           },
           reply_text: replyText,
@@ -102,13 +148,13 @@ const run = async () => {
           created_at: new Date().toISOString(),
         };
 
-        // Publish tới topic reply_commands
+        // Publish to topic reply_commands
         await publishReplyCommand(command);
 
-        console.log(`[Core Service] Đã publish command [${command.action}] -> reply_commands`);
+        console.log(`[Core Service] Published command [${command.action}] -> reply_commands`);
 
       } catch (error) {
-        console.error('[Core Service] Lỗi xử lý event:', error.message);
+        console.error('[Core Service] Error processing event:', error.message);
       }
     },
   });

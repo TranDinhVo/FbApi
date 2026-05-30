@@ -34,7 +34,7 @@ const replyComment = async (commentId, replyText) => {
   }
   const url = `${FB_BASE_URL}/${commentId}/comments`;
   const result = await realPost(url, { message: replyText });
-  console.log(`[Facebook API] Đã reply comment ${commentId}`);
+  console.log(`[Facebook API] Replied to comment ${commentId}`);
   return result;
 };
 
@@ -51,7 +51,7 @@ const hideComment = async (commentId) => {
 
   const response = await axios.post(url, params);
 
-  console.log(`[Facebook API] Đã ẩn comment ${commentId}`);
+  console.log(`[Facebook API] Hidden comment ${commentId}`);
   return response.data;
 };
 
@@ -66,7 +66,7 @@ const deleteComment = async (commentId) => {
     params: { access_token: PAGE_ACCESS_TOKEN }
   });
 
-  console.log(`[Facebook API] Đã XÓA comment ${commentId}`);
+  console.log(`[Facebook API] Deleted comment ${commentId}`);
   return response.data;
 };
 
@@ -76,8 +76,21 @@ const createPost = async (pageId, message) => {
   }
   const url = `${FB_BASE_URL}/${pageId}/feed`;
   const result = await realPost(url, { message });
-  console.log(`[Facebook API] Đã tạo post cho page ${pageId}`);
+  console.log(`[Facebook API] Created post for page ${pageId}`);
   return result;
 };
 
-module.exports = { replyComment, hideComment, deleteComment, createPost };
+const sendMessage = async (senderId, messageText) => {
+  if (FAKE_MODE) {
+    return fakeSuccess('sendMessage', { senderId, messageText });
+  }
+  const url = `${FB_BASE_URL}/me/messages`;
+  const result = await realPost(url, {
+    recipient: { id: senderId },
+    message: { text: messageText },
+  });
+  console.log(`[Facebook API] Sent message to user ${senderId}`);
+  return result;
+};
+
+module.exports = { replyComment, hideComment, deleteComment, createPost, sendMessage };

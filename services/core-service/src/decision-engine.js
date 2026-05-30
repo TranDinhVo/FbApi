@@ -1,13 +1,13 @@
 const makeDecision = async (event, spamResult, aiResult) => {
-  console.log(`[Decision Engine] Đang xử lý [${event.type.toUpperCase()}] từ ${event.senderName}`);
+  console.log(`[Decision Engine] Processing [${event.type.toUpperCase()}] from ${event.senderName || event.senderId || 'Unknown'}`);
 
   if (spamResult.isSpam) {
-    console.log(`=> HÀNH ĐỘNG: [ẨN BÌNH LUẬN] - Lý do: Spam / Chứa liên kết.`);
+    console.log(`=> ACTION: [HIDE COMMENT] - Reason: Spam / Contains link.`);
     return 'hidden';
   }
 
   if (aiResult.error === 'AI_NOT_CONFIGURED') {
-    console.log(`=> HÀNH ĐỘNG: [BỎ QUA] - Lý do: Chưa cấu hình API Key của AI.`);
+    console.log(`=> ACTION: [SKIP] - Reason: AI API Key not configured.`);
     return 'no_action';
   }
 
@@ -26,21 +26,21 @@ const makeDecision = async (event, spamResult, aiResult) => {
   }
 
   if (sentiment === 'tích cực') {
-    console.log(`=> HÀNH ĐỘNG: [CẢM ƠN] - Lý do: Cảm xúc tích cực.`);
+    console.log(`=> ACTION: [THANK] - Reason: Positive sentiment.`);
     return 'reply_positive';
   }
 
   if (sentiment === 'tiêu cực') {
-    console.log(`=> HÀNH ĐỘNG: [XIN LỖI] - Lý do: Cảm xúc tiêu cực.`);
+    console.log(`=> ACTION: [APOLOGIZE] - Reason: Negative sentiment.`);
     return 'reply_negative';
   }
 
   if (intent === 'hỏi giá') {
-    console.log(`=> HÀNH ĐỘNG: [AUTO-REPLY BÁO GIÁ] - Lý do: Khách hỏi giá.`);
+    console.log(`=> ACTION: [AUTO-REPLY PRICE QUOTE] - Reason: Customer asking for price.`);
     return 'auto_reply';
   }
 
-  console.log(`=> HÀNH ĐỘNG: [BỎ QUA/KHÔNG LÀM GÌ] - Ý định: ${intent}`);
+  console.log(`=> ACTION: [SKIP/NO ACTION] - Intent: ${intent}`);
   return 'no_action';
 };
 

@@ -6,7 +6,7 @@ const MAX_RETRIES = process.env.MAX_RETRIES || '3';
 
 const run = async () => {
   console.log('====================================================');
-  console.log('[Retry Service] Khởi động...');
+  console.log('[Retry Service] Starting...');
   console.log(`[Retry Service] MAX_RETRIES = ${MAX_RETRIES}`);
   console.log('[Retry Service] Consume: send_failed');
   console.log('[Retry Service] Publish: send_retry | dead_letter');
@@ -15,7 +15,7 @@ const run = async () => {
   await connectProducer();
   await connectConsumer();
 
-  console.log('[Retry Service] Đã khởi động thành công!');
+  console.log('[Retry Service] Started successfully!');
 };
 
 

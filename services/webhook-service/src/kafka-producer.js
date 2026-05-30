@@ -34,6 +34,7 @@ const publishEvent = async (topic, eventData) => {
     console.log(`[Kafka] Event published to ${topic}`);
   } catch (error) {
     console.error(`[Kafka] Failed to publish event to ${topic}:`, error);
+    throw error;
   }
 };
 

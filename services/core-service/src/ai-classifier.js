@@ -47,7 +47,7 @@ Nội dung: "${content}"
 
     return { intent: 'unknown', sentiment: 'neutral', error: 'AI_NOT_CONFIGURED' };
   } catch (error) {
-    console.error('[AI] Lỗi khi gọi AI API:', error.message);
+    console.error('[AI] Error calling AI API:', error.message);
     return { intent: 'unknown', sentiment: 'neutral', error: error.message };
   }
 };

@@ -47,7 +47,7 @@ const normalizeAndPublish = async (body) => {
                 raw: change.value,
                 status: 'received'
               };
-              console.log(`[Webhook] Đã nhận Comment mới từ ${change.value.from.name}: "${change.value.message}"`);
+              console.log(`[Webhook] New comment received from ${change.value.from.name}: "${change.value.message}"`);
               await publishEvent('raw_events', normalizedEvent);
             }
             else if (['status', 'post', 'photo', 'video', 'share'].includes(change.value.item) && change.value.verb === 'add') {
@@ -63,7 +63,7 @@ const normalizeAndPublish = async (body) => {
                 raw: change.value,
                 status: 'received'
               };
-              console.log(`[Webhook] Đã nhận Bài đăng mới: "${normalizedEvent.content}"`);
+              console.log(`[Webhook] New post received: "${normalizedEvent.content}"`);
               await publishEvent('raw_events', normalizedEvent);
             }
           }

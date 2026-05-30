@@ -1,7 +1,7 @@
 {
   "name": "core-service",
   "version": "2.0.0",
-  "description": "Core Processing Pipeline - AI classify, spam filter, decision engine → publish reply_commands",
+  "description": "Core Processing Pipeline - AI classify, spam filter, decision engine -> publish reply_commands",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

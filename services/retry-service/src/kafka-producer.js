@@ -15,7 +15,7 @@ const producer = kafka.producer({
 
 const connectProducer = async () => {
   await producer.connect();
-  console.log('[Retry Service Producer] Đã kết nối Kafka producer.');
+  console.log('[Retry Service Producer] Connected to Kafka producer.');
 };
 
 
@@ -24,7 +24,7 @@ const publishSendRetry = async (message) => {
     topic: 'send_retry',
     messages: [{ key: message.command_id, value: JSON.stringify(message) }],
   });
-  console.log(`[Retry Service Producer] Đã publish [${message.command_id}] -> topic "send_retry" (retry #${message.retry_count})`);
+  console.log(`[Retry Service Producer] Published [${message.command_id}] -> topic "send_retry" (retry #${message.retry_count})`);
 };
 
 
@@ -43,7 +43,7 @@ const publishDeadLetter = async (message) => {
     topic: 'dead_letter',
     messages: [{ key: deadLetter.command_id, value: JSON.stringify(deadLetter) }],
   });
-  console.log(`[Retry Service Producer] Đã publish [${deadLetter.command_id}] -> topic "dead_letter" (vĩnh viễn thất bại)`);
+  console.log(`[Retry Service Producer] Published [${deadLetter.command_id}] -> topic "dead_letter" (permanently failed)`);
 };
 
 const disconnectProducer = async () => {
