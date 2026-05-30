@@ -1,0 +1,16 @@
+{
+  "name": "webhook-service",
+  "version": "1.0.0",
+  "description": "Facebook Webhook Receiver",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
+    "kafkajs": "^2.2.4"
+  }
+}

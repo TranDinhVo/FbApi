@@ -1,0 +1,20 @@
+groups:
+  - name: kafka_alerts
+    rules:
+      - alert: KafkaBrokerDown
+        expr: kafka_brokers == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka Broker is down"
+          description: "No Kafka brokers are running."
+
+      - alert: DeadLetterQueueAlert
+        expr: increase(kafka_topic_partition_current_offset{topic="dead_letter"}[5m]) > 0
+        labels:
+          severity: critical
+          service: "retry-service"
+        annotations:
+          summary: "New messages in Dead Letter Queue (DLQ)"
+          description: "Phát hiện message rơi vào DLQ do lỗi khi gọi Facebook API vượt quá số lần retry."
